@@ -1,0 +1,12 @@
+
+
+include: "Recombination.snake"
+include: "Species.snake"
+
+rule all:
+	input:
+		expand("output/{domain}_recombination.svg", domain = "rhodopsins"),
+		expand("species_analysis/{taxon}/treeshrink.ok", taxon = taxa.keys()),
+		"output/rooted_trees.svg",
+		"output/species_chronos.nwk",
+		expand("output/{taxon}.svg", taxon = taxa.keys())

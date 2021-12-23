@@ -1,0 +1,25 @@
+Kv-RRB	Karlodinium_veneficum	Kv
+Gc-RRB	Gymnodinium_catenatum	Gc
+Pa-RRB	Phaeocystis_antarctica	Pa
+Ct-RB	Cymbomonas_tetramitiformis	Ct
+M2545691-RRB		
+M40705534-RB	M40705534	M40705534
+Lc-RRB	Lepidodinium_chlorophorum	Lc
+Df-RRB-1	Dinophysis_fortii	Df
+Df-RRB-2	Dinophysis_fortii	Df
+Gr-RRB	Gymnoxanthella_radiolariae	Gr
+Kb-RRB	Karenia_brevis	Kb
+RSD-RRB	Shimiella_sp._Ross_Sea	RSD
+Km-RRB	Karenia_mikimotoi	Km
+Ps-RRB	Paragymnodinium_shiwhaense	Ps
+Tara-RRB		
+Pr-RRB	Phaeocystis_rex	Pr
+TGD-B	Dinophyceae_sp._TGD	TGD
+As-RRB	Akashiwo_sanguinea	As
+M54302063-RB		
+M99781746-RB		
+MGD-RB-1	Dinophyceae_sp._MGD	MGD
+Tf-RRB	Tripos_fusus	Tf
+Da-RRB-1	Dinophysis_acuminata	Da
+Da-RRB-2	Dinophysis_acuminata	Da
+CspM3265-RB	Cymbomonas_sp._M3265	CspM3265
