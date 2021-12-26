@@ -2,6 +2,7 @@
 
 include: "Recombination.snake"
 include: "Species.snake"
+include: "Global_bestrophins.snake"
 
 rule all:
 	input:
@@ -9,4 +10,7 @@ rule all:
 		expand("species_analysis/{taxon}/treeshrink.ok", taxon = taxa.keys()),
 		"output/rooted_trees.svg",
 		"output/species_chronos.nwk",
-		expand("output/{taxon}.svg", taxon = taxa.keys())
+		expand("output/{taxon}.svg", taxon = taxa.keys()),
+		"output/bestrophins_ur50_iqtree.pdf"
+		# "global_analysis/bestrophins/uniref50.fasta",
+		# "global_analysis/bestrophins/uniref50.txt"

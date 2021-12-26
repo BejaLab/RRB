@@ -1,0 +1,45 @@
+Taxon	Species	Strain	Name	Assemblies	IsOutgroup
+chlorophytes	Cymbomonas tetramitiformis	PLY AMNH	Cymbomonas_tetramitiformis_PLY_AMNH	GCA_001247695.1	
+chlorophytes	Cymbomonas sp.	M3265	Cymbomonas_sp._M3265	1KP_XIVI	
+chlorophytes	Pyramimonas parkeae	CCMP726	Pyramimonas_parkeae_CCMP726	MMETSP0058,MMETSP0059	
+chlorophytes	Pyramimonas melkonianii	CCMP722	Pyramimonas_melkonianii_CCMP722	MMETSP1169	
+chlorophytes	Micromonas pusilla	CCMP1545	Micromonas_pusilla_CCMP1545	GCA_000151265.1	
+chlorophytes	Chlamydomonas reinhardtii	CC-503 cw92 mt+	Chlamydomonas_reinhardtii_CC-503_cw92_mt_	GCA_000002595.3
+chlorophytes	Prasinococcus capsulatus	CCMP1194	Prasinococcus_capsulatus_CCMP1194	1KP_XMCL,MMETSP0941	outgroup
+chlorophytes	Mantoniella antarctica	SL-175	Mantoniella_antarctica_SL-175	MMETSP1106
+dinoflagellates	Akashiwo sanguinea		Akashiwo_sanguinea	PRJNA257290-1294205-143672	
+dinoflagellates	Alexandrium tamarense	CCMP1771	Alexandrium_tamarense_CCMP1771	MMETSP0378,MMETSP0380,MMETSP0382,MMETSP0384	
+dinoflagellates	Amphidinium carterae	CCMP1314	Amphidinium_carterae_CCMP1314	MMETSP0258,MMETSP0259,MMETSP0398	
+dinoflagellates	Breviolum minutum	SSB01	Breviolum_minutum_SSB01	GICE00000000.1	
+dinoflagellates	Dinophyceae sp. MGD		Dinophyceae_sp._MGD	PRJDB8237-2608282	
+dinoflagellates	Dinophyceae sp. TGD		Dinophyceae_sp._TGD	PRJDB8237-2608281	
+dinoflagellates	Dinophysis acuminata	DAEP01	Dinophysis_acuminata_DAEP01	MMETSP0797,GAIJ00000000.1	
+dinoflagellates	Dinophysis fortii		Dinophysis_fortii	PRJDB7076	
+dinoflagellates	Durinskia baltica	CSIRO CS-38	Durinskia_baltica_CSIRO_CS-38	MMETSP0116,MMETSP0117	
+dinoflagellates	Gymnodinium catenatum	GC744	Gymnodinium_catenatum_GC744	MMETSP0784,GAIL00000000.1	
+dinoflagellates	Gymnoxanthella radiolariae		Gymnoxanthella_radiolariae	PRJEB25203	
+dinoflagellates	Heterocapsa rotundata	SCCAP K-0483	Heterocapsa_rotundata_SCCAP_K-0483	MMETSP0503	
+dinoflagellates	Karenia brevis	Wilson	Karenia_brevis_Wilson	MMETSP0648,MMETSP0649,MMETSP0201,MMETSP0202,GFLM00000000.1	
+dinoflagellates	Karenia mikimotoi	DP-32	Karenia_mikimotoi_DP-32	GHKS00000000.1	
+dinoflagellates	Karlodinium veneficum	CCMP2283	Karlodinium_veneficum_CCMP2283	MMETSP1015,MMETSP1016,MMETSP1017	
+dinoflagellates	Lepidodinium chlorophorum	NIES-1868	Lepidodinium_chlorophorum_NIES-1868	PRJDB6621	
+dinoflagellates	Lingulodinium polyedra	CCMP1738	Lingulodinium_polyedra_CCMP1738	MMETSP1032,MMETSP1033,MMETSP1034,MMETSP1035	
+dinoflagellates	Noctiluca scintillans		Noctiluca_scintillans	MMETSP0253	
+dinoflagellates	Oxyrrhis marina	LB1974	Oxyrrhis_marina_LB1974	MMETSP1424,MMETSP1425,MMETSP1426	outgroup
+dinoflagellates	Pelagodinium beii	RCC1491	Pelagodinium_beii_RCC1491	MMETSP1338	
+dinoflagellates	Togula jolla	CCCM 725	Togula_jolla_CCCM_725	MMETSP0224	
+dinoflagellates	Paragymnodinium shiwhaense	PSSW0605	Paragymnodinium_shiwhaense_PSSW0605	PRJNA638788	
+dinoflagellates	Ross Sea Dinoflagellate	RS-24	Ross_Sea_Dinoflagellate_RS-24	PRJNA428208	
+dinoflagellates	Tripos fusus	PA161109	Tripos_fusus_PA161109	MMETSP1074,MMETSP1075	
+dinoflagellates	Polykrikos kofoidii	PKJH1607	Polykrikos_kofoidii_PKJH1607	PRJNA638792	
+dinoflagellates	Azadinium spinosum	3D9	Azadinium_spinosum_3D9	MMETSP1036,MMETSP1037,MMETSP1038	
+haptophytes	Phaeocystis antarctica	CCMP1374	Phaeocystis_antarctica_CCMP1374	MMETSP1444,HBQY00000000.1	
+haptophytes	Phaeocystis antarctica	25	Phaeocystis_antarctica_25	GFUQ00000000.1	
+haptophytes	Phaeocystis globosa	CCMP1528	Phaeocystis_globosa_CCMP1528	PRJNA489328	
+haptophytes	Phaeocystis globosa	RCC3538	Phaeocystis_globosa_RCC3538	HBTC00000000.1	
+haptophytes	Gephyrocapsa huxleyi	PLY M219	Gephyrocapsa_huxleyi_PLY_M219	MMETSP1150,MMETSP1151,MMETSP1152,MMETSP1153	
+haptophytes	Phaeocystis rex	CCMP2000	Phaeocystis_rex_CCMP2000	MMETSP1178	
+haptophytes	Phaeocystis sp.	PLY559	Phaeocystis_sp._PLY559	HBRK00000000.1	
+haptophytes	Phaeocystis jahnii	CCMP2496	Phaeocystis_jahnii_CCMP2496	PRJNA603434-118080	
+haptophytes	Phaeocystis cordata	CCMP3104	Phaeocystis_cordata_CCMP3104	MMETSP1465,PRJNA603434-118079	
+haptophytes	Diacronema lutheri	NIVA-4/92	Diacronema_lutheri_NIVA-4_92	GCA_019448385.1	outgroup

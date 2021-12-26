@@ -8,12 +8,12 @@ names = defaultdict(list)
 outgroups = defaultdict(list)
 
 taxa = {}
-with open('species/taxa.txt') as fh:
+with open('species_metadata/taxa.txt') as fh:
 	reader = DictReader(fh, delimiter = '\t')
 	for row in reader:
 		taxon = row['Taxon']
 		taxa[taxon] = row
-with open('species/species.txt') as fh:
+with open('species_metadata/species.txt') as fh:
 	reader = DictReader(fh, delimiter = '\t')
 	for row in reader:
 		taxon = row['Taxon']
@@ -24,7 +24,7 @@ with open('species/species.txt') as fh:
 
 rule assemblies_collect:
 	input:
-		lambda w: expand("species/assemblies/{assembly}.faa", assembly = assemblies[w.name])
+		lambda w: expand("species_assemblies/{assembly}.faa", assembly = assemblies[w.name])
 	output:
 		"species_analysis/{taxon}/sequences/{name}.faa"
 	shell:
@@ -240,7 +240,7 @@ rule plot_species_tree:
 		astral = "species_analysis/{taxon}/astral_w_outgroup-t2.rooted.tree",
 		erable = "species_analysis/{taxon}/erable_w_outgroup.rooted.tree",
 		busco = lambda w: expand("species_analysis/{taxon}/busco/{name}/run_{lineage}/full_table.tsv", taxon = w.taxon, name = names[w.taxon], lineage = taxa[w.taxon]["BuscoLineage"]),
-		species = "species/species.txt"
+		species = "species_metadata/species.txt"
 	output:
 		"output/{taxon}.svg"
 	params:

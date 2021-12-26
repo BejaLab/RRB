@@ -1,0 +1,4 @@
+Taxon	Orthology	BuscoLineage	MinSpecies	Width	Height
+dinoflagellates	busco	alveolata_odb10	13	8	5
+chlorophytes	busco	chlorophyta_odb10	5	4	2.5
+haptophytes	proteinortho	eukaryota_odb10	6	4	2.5

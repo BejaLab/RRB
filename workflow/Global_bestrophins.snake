@@ -1,0 +1,215 @@
+
+best_seeds = [ 675042, 675045, 675051, 675823, 676882, 678437, 679257, 680587, 681566, 682770, 683843, 685109, 686159, 687414, 688501, 689720, 690775, 692247, 693136, 694567 ]
+
+rule best_download_alignment:
+	output:
+		"global_analysis/bestrophins/uniprot_aln.fasta"
+	params:
+		pfam = "PF01062"
+	shell:
+		"curl 'https://pfam.xfam.org/family/{params.pfam}/alignment/uniprot/format?format=fasta&alnType=uniprot&order=t&case=l&gaps=dashes&download=1' > {output}"
+
+rule best_download_uniref50_fasta:
+	output:
+		"global_analysis/bestrophins/uniref50.fasta"
+	params:
+		pfam = "PF01062",
+		id = 0.5
+	shell:
+		"curl 'https://www.uniprot.org/uniref/?query=uniprot:(database:(type:pfam+{params.pfam}))+identity:{params.id}&format=fasta&force=true' > {output}"
+
+rule best_download_uniref50_tab:
+	output:
+		"global_analysis/bestrophins/uniref50.txt"
+	params:
+		pfam = "PF01062",
+		id = 0.5,
+		columns = "id,reviewed,name,count,members,organisms,length"
+	shell:
+		"curl 'https://www.uniprot.org/uniref/?query=uniprot:(database:(type:pfam+{params.pfam}))+identity:{params.id}&format=tab&force=true&columns={params.columns}' > {output}"
+
+rule best_select_uniref50_trim:
+	input:
+		fas = "global_analysis/bestrophins/uniprot_aln.fasta",
+		ur50 = "global_analysis/bestrophins/uniref50.txt"
+	output:
+		"global_analysis/bestrophins/ur50_aln.faa"
+	shell:
+		"cut -f1 {input.ur50} | tail -n+2 | cut -f2 -d_ | seqkit grep -rf- {input.fas} | seqkit replace -sp [a-z] -r - -o {output}"
+
+rule best_uniref50_faidx:
+	input:
+		"global_analysis/bestrophins/ur50_aln.faa"
+	output:
+		"global_analysis/bestrophins/ur50_aln.faa.fai"
+	shell:
+		"seqkit faidx {input}"
+
+rule best_uniref50_min_len:
+	input:
+		fas = "global_analysis/bestrophins/ur50_aln.faa",
+		fai = "global_analysis/bestrophins/ur50_aln.faa.fai"
+	output:
+		"global_analysis/bestrophins/ur50_aln_long.faa"
+	params:
+		min_len = 240
+	shell:
+		"seqkit seq -nigm{params.min_len} {input.fas} | xargs seqkit faidx {input.fas} > {output}"
+
+rule best_bouncer:
+	input:
+		"global_analysis/bestrophins/ur50_aln_long.faa"
+	output:
+		"global_analysis/bestrophins/ur50_aln_long_output_clean.fasta"
+	params:
+		g = 10,
+		k = 0.25
+	shell:
+		"SequenceBouncer.py -i {input} -g {params.g} -k {params.k}"
+
+rule best_bouncer_plain:
+	input:
+		"global_analysis/bestrophins/ur50_aln_long_output_clean.fasta"
+	output:
+		"global_analysis/bestrophins/ur50_long.fasta"
+	shell:
+		"seqkit seq -g -o {output} {input}"
+
+rule best_cdhit:
+	input:
+		"global_analysis/bestrophins/ur50_long.fasta"
+	output:
+		cdhit = "global_analysis/bestrophins/ur50_long.cdhit",
+		clstr = "global_analysis/bestrophins/ur50_long.cdhit.clstr"
+	params:
+		n = 2,
+		c = 0.5
+	threads:
+		40
+	shell:
+		"cdhit -i {input} -o {output} -n {params.n} -c {params.c} -T {threads}"
+
+rule best_cdhit_filter:
+	input:
+		cdhit = "global_analysis/bestrophins/ur50_long.cdhit",
+		fas = "global_analysis/bestrophins/ur50_aln.faa",
+		fai = "global_analysis/bestrophins/ur50_aln.faa.fai"
+	output:
+		"global_analysis/bestrophins/ur50_aln_filtered.faa"
+	shell:
+		"seqkit seq -ni {input.cdhit} | xargs seqkit faidx {input.fas} > {output}"
+
+rule best_trimal:
+	input:
+		"global_analysis/bestrophins/ur50_aln_filtered.faa"
+	output:
+		"global_analysis/bestrophins/ur50_trim.faa"
+	params:
+		gt = 0.9
+	shell:
+		"trimal -in {input} -out {output} -gt {params.gt}"
+
+rule best_iqtree:
+	input:
+		"global_analysis/bestrophins/ur50_trim.faa"
+	output:
+		"global_analysis/bestrophins/iqtree/{seed}/ur50.treefile",
+		"global_analysis/bestrophins/iqtree/{seed}/ur50.log"
+	params:
+		prefix = "global_analysis/bestrophins/iqtree/{seed}/ur50",
+		bb = 1000,
+		pers = 0.2,
+		nstop = 500,
+	threads:
+		2
+	shell:
+		"iqtree2 -s {input} -pre {params.prefix} -seed {wildcards.seed} -bb {params.bb} -T {threads} -redo -pers {params.pers} -nstop {params.nstop}"
+
+rule best_best_iqtree:
+	input:
+		log_files  = expand("global_analysis/bestrophins/iqtree/{seed}/ur50.log", seed = best_seeds),
+		tree_files = expand("global_analysis/bestrophins/iqtree/{seed}/ur50.treefile", seed = best_seeds)
+	output:
+		log_file  = "output/bestrophins_ur50_iqtree.log",
+		tree_file = "output/bestrophins_ur50_iqtree.treefile"
+	script:
+		"scripts/best_global_tree.R"
+
+rule best_get_taxonomy:
+	input:
+		"global_analysis/bestrophins/uniref50.fasta"
+	output:
+		"global_analysis/bestrophins/uniref50.taxonomy"
+	script:
+		"scripts/get_taxonomy.R"
+
+rule best_plot_tree:
+	input:
+		tree     = "output/bestrophins_ur50_iqtree.treefile",
+		metadata = "global_metadata/bestrophins.txt",
+		taxa     = "global_metadata/taxa.txt",
+		genes    = "global_metadata/bestrophins.txt",
+		taxonomy = "global_analysis/bestrophins/uniref50.taxonomy",
+		tab      = "global_analysis/bestrophins/uniref50.txt",
+		fasta    = "global_analysis/bestrophins/uniref50.fasta",
+		clstr    = "global_analysis/bestrophins/ur50_long.cdhit.clstr",
+		targetp  = "global_analysis/bestrophins/predictions/uniref50.targetp2",
+		asafind  = "global_analysis/bestrophins/predictions/uniref50.asafind",
+		blast    = "global_analysis/bestrophins/predictions/uniref50.blastp"
+	output:
+		"output/bestrophins_ur50_iqtree.pdf"
+	script:
+		"scripts/plot_global_bestrophins.R"
+
+rule best_signalp4:
+	input:
+		"global_analysis/bestrophins/uniref50.fasta"
+	output:
+		"global_analysis/bestrophins/predictions/uniref50.signalp"
+	shell:
+		"signalp -f short {input} > {output}"
+
+rule best_targetp:
+	input:
+		"global_analysis/bestrophins/uniref50.fasta"
+	output:
+		"global_analysis/bestrophins/predictions/uniref50.targetp2"
+	shell:
+		"targetp -org pl -fasta {input} -stdout > {output}"
+
+rule best_asafind:
+	input:
+		fasta = "global_analysis/bestrophins/uniref50.fasta",
+		signalp = "global_analysis/bestrophins/predictions/uniref50.signalp"
+	output:
+		"global_analysis/bestrophins/predictions/uniref50.asafind"
+	shell:
+		"ASAFind.py -f {input.fasta} -p {input.signalp} -o {output}"
+
+rule best_translate:
+	input:
+		"codons/fasta/bestrophins_core_CODON.fasta"
+	output:
+		"global_analysis/bestrophins/bestrodopsins_bestrophins.faa"
+	shell:
+		"seqkit translate {input} | seqkit seq -go {output}"
+
+rule best_makeblastdb:
+	input:
+		"global_analysis/bestrophins/bestrodopsins_bestrophins.faa"
+	output:
+		"global_analysis/bestrophins/bestrodopsins_bestrophins.faa.pdb"
+	shell:
+		"makeblastdb -in {input} -dbtype prot"
+
+rule best_blast:
+	input:
+		"global_analysis/bestrophins/bestrodopsins_bestrophins.faa.pdb",
+		query = "global_analysis/bestrophins/uniref50.fasta",
+		db = "global_analysis/bestrophins/bestrodopsins_bestrophins.faa"
+	output:
+		"global_analysis/bestrophins/predictions/uniref50.blastp"
+	params:
+		evalue = 1e-100
+	shell:
+		"blastp -query {input.query} -db {input.db} -evalue {params.evalue} -outfmt 6 -out {output}"

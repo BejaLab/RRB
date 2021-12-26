@@ -71,13 +71,19 @@ tree <- as_tibble(erable) %>%
 	as.treedata
 busco.data <- filter(busco, label %in% tree@phylo$tip.label) %>%
 	select(label, Status, pct)
+busco.colors <- c(
+	Complete   = "#00ba38",
+	Fragmented = "#619cff",
+	Missing    = "#f8766d"
+)
 
 tree.p <- ggtree(tree) +
 	geom_tiplab(aes(label = paste(Species, Strain))) +
-	geom_text(aes(x = branch, label = round(pp1, 2)), nudge_y =  0.3) +
-	geom_text(aes(x = branch, label = round(EN,  2)), nudge_y = -0.3) +
+	geom_text(aes(x = branch, label = round(pp1, 2)), size = 2.5, nudge_y =  0.3) +
+	geom_text(aes(x = branch, label = round(EN,  2)), size = 2.5, nudge_y = -0.3) +
 	geom_treescale(width = 0.2)
 
-p <- facet_plot(tree.p, data = busco.data, panel = "Busco", geom = geom_barh, mapping = aes(x = pct, fill = Status), stat = "identity")
+p <- facet_plot(tree.p, data = busco.data, panel = "Busco", geom = geom_barh, mapping = aes(x = pct, fill = Status), stat = "identity") +
+	scale_fill_manual(values = busco.colors)
 p <- facet_widths(p, c(Busco = .2))
 ggsave(output_file, p, width = width, height = height)
