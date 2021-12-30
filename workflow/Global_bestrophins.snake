@@ -133,7 +133,7 @@ rule best_best_iqtree:
 		log_file  = "output/bestrophins_ur50_iqtree.log",
 		tree_file = "output/bestrophins_ur50_iqtree.treefile"
 	script:
-		"scripts/best_global_tree.R"
+		"scripts/select_global_tree.R"
 
 rule best_get_taxonomy:
 	input:
@@ -190,23 +190,23 @@ rule best_translate:
 	input:
 		"codons/fasta/bestrophins_core_CODON.fasta"
 	output:
-		"global_analysis/bestrophins/bestrodopsins_bestrophins.faa"
+		"global_analysis/bestrophins/bestrhodopsins_bestrophins.faa"
 	shell:
 		"seqkit translate {input} | seqkit seq -go {output}"
 
 rule best_makeblastdb:
 	input:
-		"global_analysis/bestrophins/bestrodopsins_bestrophins.faa"
+		"global_analysis/bestrophins/bestrhodopsins_bestrophins.faa"
 	output:
-		"global_analysis/bestrophins/bestrodopsins_bestrophins.faa.pdb"
+		"global_analysis/bestrophins/bestrhodopsins_bestrophins.faa.pdb"
 	shell:
 		"makeblastdb -in {input} -dbtype prot"
 
 rule best_blast:
 	input:
-		"global_analysis/bestrophins/bestrodopsins_bestrophins.faa.pdb",
+		"global_analysis/bestrophins/bestrhodopsins_bestrophins.faa.pdb",
 		query = "global_analysis/bestrophins/uniref50.fasta",
-		db = "global_analysis/bestrophins/bestrodopsins_bestrophins.faa"
+		db = "global_analysis/bestrophins/bestrhodopsins_bestrophins.faa"
 	output:
 		"global_analysis/bestrophins/predictions/uniref50.blastp"
 	params:

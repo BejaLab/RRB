@@ -1,0 +1,151 @@
+
+rule rhod_cluster_bestrhodopsins_and_related:
+	input:
+		"global_metadata/rhodopsin_bestrhodopsins_and_related.fasta"
+	output:
+		"global_analysis/rhodopsins/rhodopsin_bestrhodopsins_and_related.cdhit"
+	params:
+		c = 0.5,
+		n = 2
+	shell:
+		"cdhit -i {input} -o {output} -d 0 -c {params.c} -n {params.n}"
+
+rule rhod_cat:
+	input:
+		"global_analysis/rhodopsins/rhodopsin_bestrhodopsins_and_related.cdhit",
+		"global_metadata/rhodopsin_outgroups.fasta",
+		"global_metadata/rhodopsin_selected_8TMs_from_uniref50.fasta"
+	output:
+		"global_analysis/rhodopsins/rhodopsins.fasta"
+	shell:
+		"seqkit seq {input} -o {output}"
+
+rule rhod_cdhit:
+	input:
+		"global_analysis/rhodopsins/rhodopsins.fasta"
+	output:
+		"global_analysis/rhodopsins/rhodopsins.cdhit"
+	params:
+		c = 0.9,
+		n = 2
+	shell:
+		"cdhit -i {input} -o {output} -c {params.c} -n {params.n} -d 0"
+
+rule rhod_mafft:
+	input:
+		"global_analysis/rhodopsins/rhodopsins.cdhit"
+	output:
+		"global_analysis/rhodopsins/rhodopsins.mafft"
+	threads:
+		40
+	params:
+		mode = [ "--maxiterate 1000", "--localpair" ]
+	shell:
+		"mafft --thread {threads} --reorder {params.mode} {input} > {output}"
+
+rule rhod_trimal1:
+	input:
+		"global_analysis/rhodopsins/rhodopsins.mafft"
+	output:
+		"global_analysis/rhodopsins/rhodopsins.trimal"
+	params:
+		gt = 0.8
+	shell:
+		"trimal -in {input} -out {output} -gt {params.gt}"
+
+rule rhod_getlong:
+	input:
+		trimal = "global_analysis/rhodopsins/rhodopsins.trimal",
+		mafft = "global_analysis/rhodopsins/rhodopsins.mafft"
+	output:
+		"global_analysis/rhodopsins/rhodopsins.mafft.long"
+	params:
+		min_len = 180
+	shell:
+		"seqkit seq -ni -gm{params.min_len} {input.trimal} | seqkit grep -f- {input.mafft} -o {output}"
+
+rule rhod_trimal2:
+	input:
+		"global_analysis/rhodopsins/rhodopsins.mafft.long"
+	output:
+		"global_analysis/rhodopsins/rhodopsins.trimal.long"
+	params:
+		gt = 0.9
+	shell:
+		"trimal -in {input} -out {output} -gt {params.gt}"
+
+rule rhod_trim_to_domain:
+	input:
+		"global_analysis/rhodopsins/rhodopsins.trimal.long"
+	output:
+		"global_analysis/rhodopsins/rhodopsins.trimal.domain.fasta"
+	params:
+		offset = 10,
+		residue = "K"
+	shell:
+		"""
+		max=$(hmmbuild /dev/stdout {input} | awk -v offset={params.offset} -v residue={params.residue} '$23==residue {{print $22+offset}}' | tail -n1)
+		seqkit subseq -r "1:$max" {input} | seqkit rmdup -so {output}
+		"""
+
+rhod_seeds = [ 9277, 11160, 12613, 13639, 14953, 16110, 17291, 18533, 19633, 20998, 22076, 23467, 24639, 25765, 27041, 28300, 29390, 30649, 31889, 33058 ]
+
+rule rhod_iqtree:
+	input:
+		"global_analysis/rhodopsins/rhodopsins.trimal.domain.fasta"
+	output:
+		"global_analysis/rhodopsins/iqtree/{seed}/rhodopsins.treefile",
+		"global_analysis/rhodopsins/iqtree/{seed}/rhodopsins.log"
+	params:
+		prefix = "global_analysis/rhodopsins/iqtree/{seed}/rhodopsins",
+		bb = 1000,
+		pers = 0.2,
+		nstop = 500,
+	threads:
+		2
+	shell:
+		"iqtree2 -s {input} -pre {params.prefix} -seed {wildcards.seed} -bb {params.bb} -T {threads} -redo -pers {params.pers} -nstop {params.nstop}"
+
+rule rhod_select_iqtree:
+	input:
+		log_files  = expand("global_analysis/rhodopsins/iqtree/{seed}/rhodopsins.log", seed = rhod_seeds),
+		tree_files = expand("global_analysis/rhodopsins/iqtree/{seed}/rhodopsins.treefile", seed = rhod_seeds)
+	output:
+		log_file  = "output/rhodopsins_iqtree.log",
+		tree_file = "output/rhodopsins_iqtree.treefile"
+	script:
+		"scripts/select_global_tree.R"
+
+rule rhod_interproscan:
+	input:
+		"global_analysis/rhodopsins/rhodopsins.fasta"
+	output:
+		"global_analysis/rhodopsins/interproscan/rhodopsins.fasta.tsv"
+	params:
+		dir = "global_analysis/rhodopsins/interproscan"
+	threads:
+		20
+	shell:
+		"interproscan.sh -i {input} -d {params.dir} -cpu {threads}"
+
+rule rhod_get_taxonomy:
+	input:
+		"global_metadata/rhodopsin_selected_8TMs_from_uniref50.fasta"
+	output:
+		"global_analysis/rhodopsins/uniref50.taxonomy"
+	script:
+		"scripts/get_taxonomy.R"
+
+rule rhod_plot_tree:
+	input:
+		tree     = "output/rhodopsins_iqtree.treefile",
+		selected_8TMs = "global_metadata/rhodopsin_selected_8TMs_from_uniref50.fasta",
+		fasta    = "global_analysis/rhodopsins/rhodopsins.fasta",
+		taxa     = "global_metadata/taxa.txt",
+		interpro = "global_analysis/rhodopsins/interproscan/rhodopsins.fasta.tsv",
+		domains  = "global_metadata/rhodopsin_curated_interpro_domains.txt",
+		taxonomy = "global_analysis/rhodopsins/uniref50.taxonomy"
+	output:
+		"output/rhodopsins_iqtree.pdf"
+	script:
+		"scripts/plot_global_rhodopsins.R"

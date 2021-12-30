@@ -1,0 +1,32 @@
+InterPro.annotations.accession	Domain	Description
+IPR004358	HK	Signal transduction histidine kinase-related protein, C-terminal
+IPR036890	HK	Histidine kinase/HSP90-like ATPase superfamily
+IPR003594	HK	Histidine kinase/HSP90-like ATPase
+IPR003661	HK	Signal transduction histidine kinase, dimerisation/phosphoacceptor domain
+IPR036097	HK	Signal transduction histidine kinase, dimerisation/phosphoacceptor domain superfamily
+IPR005467	HK	Histidine kinase domain
+IPR000719	PK	Protein kinase domain
+IPR008271	PK	Serine/threonine-protein kinase, active site
+IPR011009	PK	Protein kinase-like domain superfamily
+IPR029787	NC	Nucleotide cyclase
+IPR001054	NC	Adenylyl cyclase class-3/4/guanylyl cyclase
+IPR023088	PDE	3'5'-cyclic nucleotide phosphodiesterase
+IPR002073	PDE	3'5'-cyclic nucleotide phosphodiesterase, catalytic domain
+IPR036971	PDE	3'5'-cyclic nucleotide phosphodiesterase, catalytic domain superfamily
+IPR023174	PDE	3'5'-cyclic nucleotide phosphodiesterase, conserved site
+IPR003607	PDE	HD/PDEase domain
+IPR001789	RR	Signal transduction response regulator, receiver domain
+IPR011006	RR	CheY-like superfamily
+IPR021134	Best	Bestrophin/UPF0187
+# IPR013761	SAM	Sterile alpha motif/pointed domain superfamily
+# IPR001660	SAM	Sterile alpha motif domain
+# IPR000014	PAS	PAS domain
+# IPR013767	PAS	PAS fold
+# IPR000700	PAS	PAS-associated, C-terminal
+# IPR035965	PAS	PAS domain superfamily
+# IPR003660	HAMP	HAMP domain
+IPR001425	Rhodopsin	Archaeal/bacterial/fungal rhodopsins
+IPR018229	Rhodopsin	Rhodopsin, retinal binding site
+IPR043476	Rhodopsin	Yro2-like, 7TM domain
+IPR017402	Rhodopsin	Proteorhodopsin
+IPR041113	Rhodopsin	Heliorhodopsin

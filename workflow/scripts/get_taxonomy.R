@@ -17,5 +17,4 @@ read.fasta(input_file) %>%
 	classification(db = "ncbi") %>%
 	`[`(!is.na(.)) %>%
 	bind_rows(.id = "Organism.ID") %>%
-	mutate(Organism.ID = as.numeric(Organism.ID)) %>%
 	write.table(output_file, sep = "\t", row.names = F, col.names = T, quote = F)

@@ -1,0 +1,287 @@
+
+min_lens = { 'bestrophins': 1000, 'rhodopsins': 600 }
+max_lens = { 'bestrophins':  750, 'rhodopsins': 800 }
+raxml_models = { 'CODON': 'GTR+G', 'NT2AA': 'LG+G+F' }
+
+rule domain_translate:
+	input:
+		"domain_sequences/{domains}.fasta"
+	output:
+		"codons_analysis/mafft/{domains}_translated.fasta"
+	shell:
+		"seqkit translate -o {output} {input}"
+
+rule domain_mafft:
+	input:
+		"codons_analysis/mafft/{domains}_translated.fasta"
+	output:
+		"codons_analysis/mafft/{domains}_translated.mafft"
+	params:
+		mode = [ "--localpair", "--maxiterate 1000" ]
+	shell:
+		"mafft {params.mode} {input} > {output}"
+
+rule domain_backtrans:
+	input:
+		mafft = "codons_analysis/mafft/{domains}_translated.mafft",
+		codons = "domain_sequences/{domains}.fasta"
+	output:
+		"codons_analysis/alignments/{domains}.fasta"
+	shell:
+		"trimal -backtrans {input.codons} -in {input.mafft} -out {output}"
+
+rule select_long:
+	input:
+		"codons_analysis/alignments/{domain}_no_outgroups_CODON.fasta"
+	output:
+		"codons_analysis/lists/{domain}_long.txt"
+	params:
+		min_len = lambda w: min_lens[w.domain]
+	shell:
+		"seqkit seq -nigm {params.min_len} {input} -o {output}"
+
+rule gard_fasta:
+	input:
+		fasta = "codons_analysis/alignments/{domain}_no_outgroups_CODON.fasta",
+		long_txt = "codons_analysis/lists/{domain}_long.txt"
+	output:
+		"codons_analysis/alignments/{domain}_CODON_recomb.fasta"
+	shell:
+		"seqkit grep -rf {input.long_txt} {input.fasta} -o {output}"
+
+rule gard_hyphy:
+	input:
+		"codons_analysis/alignments/{domain}_CODON_recomb.fasta"
+	output:
+		"codons_analysis/gard/{domain}_CODON_recomb.fasta.best-gard",
+		"codons_analysis/gard/{domain}_CODON_recomb.fasta.best-gard.fit.bf",
+		"codons_analysis/gard/{domain}_CODON_recomb.fasta.GARD.json"
+	params:
+		output_dir = "codons_analysis/gard"
+	threads:
+		4
+	log:
+		"codons_analysis/gard/{domain}.log"
+	shadow:
+		"minimal"
+	shell:
+		"""
+		hyphy GARD --type nucleotide --rv Gamma --alignment {input} CPU={threads} &> {log}
+		mv {input}.best-gard {input}.best-gard.fit.bf {input}.GARD.json {params.output_dir}
+		"""
+
+rule geneconv:
+	input:
+		"codons_analysis/alignments/{domain}_CODON_recomb.fasta"
+	output:
+		"codons_analysis/geneconv/{domain}_CODON_recomb.frags"
+	params:
+		seed = 123,
+		prefix = "codons_analysis/alignments/{domain}_CODON_recomb"
+	shadow:
+		"minimal"
+	log:
+		"codons_analysis/geneconv/{domain}.log"
+	shell:
+		"""
+		geneconv {input} -nolog -Seed={params.seed} -Gscale=1 -WideCols &> {log}
+		mv {params.prefix}.frags {output}
+		"""
+
+rule plot_recombination:
+	input:
+		fasta    = "codons_analysis/alignments/{domain}_CODON_recomb.fasta",
+		geneconv = "codons_analysis/geneconv/{domain}_CODON_recomb.frags",
+		gard     = "codons_analysis/gard/{domain}_CODON_recomb.fasta.GARD.json",
+		metadata = "metadata/metadata.xlsx",
+		features = "metadata/features_{domain}.csv",
+		RB_groups = "metadata/RB-groups.txt"
+	output:
+		"output/{domain}_recombination.svg"
+	script:
+		"scripts/plot_recombination.R"
+
+rule select_short_domains:
+	input:
+		"codons_analysis/alignments/{domain}.fasta"
+	output:
+		"codons_analysis/lists/{domain}_short.txt"
+	params:
+		max_len = lambda w: max_lens[w.domain]
+	shell:
+		"seqkit seq -gM {params.max_len} {input} | seqkit seq -ino {output}"
+
+rule select_too_short_domains:
+	input:
+		"codons_analysis/alignments/{domain}.fasta"
+	output:
+		"codons_analysis/lists/{domain}_too_short.txt"
+	params:
+		max_len = 100
+	shell:
+		"seqkit seq -gM {params.max_len} {input} | seqkit seq -ino {output}"
+
+rule sequences_core:
+	input:
+		fasta = "codons_analysis/alignments/{domain}.fasta",
+		core = "metadata/core-sequences.txt"
+	output:
+		"codons_analysis/alignments/{domain}_core_CODON.fasta"
+	shell:
+		"cut -f1 {input.core} | seqkit grep -rf - -o {output} {input.fasta}"
+
+rule sequences_subset:
+	input:
+		fasta = "codons_analysis/alignments/{domain}_core_CODON.fasta",
+		txt = "metadata/{domain}_outliers_subset.txt"
+	output:
+		"codons_analysis/alignments/{domain}_subset_CODON.fasta",
+	shell:
+		"seqkit grep -rvf {input.txt} -o {output} {input.fasta}"
+
+rule sequences_no_outgroups:
+	input:
+		fasta = "codons_analysis/alignments/{domain}.fasta",
+		txt = "metadata/{domain}_outgroups.txt"
+	output:
+		"codons_analysis/alignments/{domain}_no_outgroups_CODON.fasta"
+	shell:
+		"seqkit grep -vrf {input.txt} {input.fasta} -o {output}"
+
+rule sequences_only_outgroups:
+	input:
+		fasta = "codons_analysis/alignments/{domain}.fasta",
+		txt = "metadata/{domain}_outgroups.txt"
+	output:
+		"codons_analysis/alignments/{domain}_only_outgroups_CODON.fasta"
+	shell:
+		"seqkit grep -rf {input.txt} {input.fasta} -o {output}"
+
+rule sequences_with_outgroups:
+	input:
+		"codons_analysis/alignments/{domain}_only_outgroups_CODON.fasta",
+		"codons_analysis/alignments/{domain}_{set}_CODON.fasta"
+	output:
+		"codons_analysis/alignments/{domain}_{set}_with_outgroups_CODON.fasta"
+	shell:
+		"seqkit seq -o {output} {input}"
+
+rule translate:
+	input:
+		"codons_analysis/alignments/{prefix}_CODON.fasta"
+	output:
+		"codons_analysis/alignments/{prefix}_NT2AA.fasta"
+	shell:
+		"seqkit translate -o {output} {input}"
+
+rule raxml_evaluate:
+	input:
+		fasta  = "codons_analysis/alignments/{prefix}_{type}.fasta",
+		iqtree = "codons_analysis/iqtree/{prefix}_CODON.treefile"
+	output:
+		"codons_analysis/raxml_evaluate/{prefix}_{type}.raxml.bestTree",
+		"codons_analysis/raxml_evaluate/{prefix}_{type}.raxml.bestModel"
+	params:
+		prefix = "codons_analysis/raxml_evaluate/{prefix}_{type}",
+		seed = 123,
+		model = lambda w: raxml_models[w.type]
+	log:
+		"logs/{prefix}_{type}_raxml_evaluate.log"
+	shell:
+		"raxml-ng --redo --evaluate --msa {input.fasta} --tree {input.iqtree} --model {params.model} --seed {params.seed} --prefix {params.prefix} &> {log}"
+
+rule root_digger:
+	input:
+		fasta = "codons_analysis/alignments/{prefix}_CODON.fasta",
+		tree  = "codons_analysis/raxml_evaluate/{prefix}_CODON.raxml.bestTree",
+		model = "codons_analysis/raxml_evaluate/{prefix}_CODON.raxml.bestModel"
+	output:
+		"codons_analysis/root_digger/{prefix}_CODON.raxml.bestTree.lwr.tree",
+		"codons_analysis/root_digger/{prefix}_CODON.raxml.bestTree.rooted.tree"
+	params:
+		dir = "codons_analysis/root_digger"
+	threads:
+		30
+	shadow:
+		"minimal"
+	log:
+		"logs/{prefix}_root_digger.log"
+	shell:
+		"""
+		rd --msa {input.fasta} --tree {input.tree} --exhaustive --threads {threads} &> {log}
+		mv {input.tree}.lwr.tree {input.tree}.rooted.tree {params.dir}/
+		"""
+
+rule epa:
+	input:
+		fasta = "codons_analysis/alignments/{domain}_{set}_{type}.fasta",
+		tree  = "codons_analysis/raxml_evaluate/{domain}_{set}_{type}.raxml.bestTree",
+		model = "codons_analysis/raxml_evaluate/{domain}_{set}_{type}.raxml.bestModel",
+		outgroup = "codons_analysis/alignments/{domain}_only_outgroups_{type}.fasta"
+	output:
+		"codons_analysis/epa/{domain}_{set}_with_outgroups_{type}/epa_result.jplace"
+	params:
+		dir = "codons_analysis/{domain}_{set}_with_outgroups_{type}"
+	log:
+		"logs/epa_{domain}_{set}_{type}.log"
+	shell:
+		"epa-ng --redo -s {input.fasta} -t {input.tree} --model {input.model} -q {input.fasta_outgroups} -w {params.dir} &> {log}"
+
+rule iqtree:
+	input:
+		"codons_analysis/alignments/{prefix}_CODON.fasta"
+	output:
+		"codons_analysis/iqtree/{prefix}_{type}.treefile"
+	params:
+		seed = 123,
+		B = 1000,
+		prefix = "codons_analysis/iqtree/{prefix}_{type}"
+	threads:
+		2
+	log:
+		"logs/iqtree_{prefix}_{type}.log"
+	shell:
+		"iqtree2 -seed {params.seed} -s {input} -st {wildcards.type} -B {params.B} -T {threads} --prefix {params.prefix} -redo &> {log}"
+
+rule root_iqtree:
+	input:
+		tree = "codons_analysis/{dir}/{domain}_{set}_with_outgroups_{type}.treefile",
+		outgroups = "metadata/{domain}_outgroups.txt"
+	output:
+		"codons_analysis/{dir}/{domain}_{set}_with_outgroups_{type}.treefile.rooted"
+	shell:
+		"xargs nw_reroot -ls {input.tree} < {input.outgroups} > {output}"
+
+rule iqtree_estimate:
+	input:
+		fasta = "codons_analysis/alignments/{prefix}_CODON.fasta",
+		tree  = "codons_analysis/iqtree/{prefix}_CODON.treefile"
+	output:
+		"codons_analysis/iqtree_estimate/{prefix}_NT2AA.treefile"
+	params:
+		seed = 123,
+		prefix = "codons_analysis/iqtree_estimate/{prefix}_NT2AA"
+	threads:
+		2
+	log:
+		"logs/iqtree_estimate_{prefix}.log"
+	shell:
+		"iqtree2 -seed {params.seed} -s {input.fasta} -st NT2AA -z {input.tree} -te {input.tree} -T {threads} --prefix {params.prefix} -redo &> {log}"
+
+rule plot_root:
+	input:
+		clades = "metadata/bestrhodopsin_clades.txt",
+		best_core         = "codons_analysis/iqtree/bestrophins_core_CODON.treefile",
+		best_subset       = "codons_analysis/iqtree/bestrophins_subset_CODON.treefile",
+		best_subset_nt2aa = "codons_analysis/iqtree_estimate/bestrophins_subset_NT2AA.treefile",
+		best_core_raxml_nwk   = "codons_analysis/root_digger/bestrophins_core_CODON.raxml.bestTree.rooted.tree",
+		best_core_raxml_nhx   = "codons_analysis/root_digger/bestrophins_core_CODON.raxml.bestTree.lwr.tree",
+		best_subset_raxml_nwk = "codons_analysis/root_digger/bestrophins_subset_CODON.raxml.bestTree.rooted.tree",
+		best_subset_raxml_nhx = "codons_analysis/root_digger/bestrophins_subset_CODON.raxml.bestTree.lwr.tree",
+		best_w_outgroups_nt2_rooted = "codons_analysis/iqtree_estimate/bestrophins_core_with_outgroups_NT2AA.treefile.rooted",
+		rhod_w_outgroups_rooted     = "codons_analysis/iqtree/rhodopsins_core_with_outgroups_CODON.treefile.rooted",
+		rhod_w_outgroups_nt2_rooted = "codons_analysis/iqtree_estimate/rhodopsins_core_with_outgroups_NT2AA.treefile.rooted"
+	output:
+		"output/rooted_trees.svg"
+	script:
+		"scripts/plot_root.R"
