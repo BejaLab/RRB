@@ -1,0 +1,123 @@
+CLUSTAL FORMAT for T-COFFEE Version_13.45.0.4846264 [http://www.tcoffee.org] [MODE:  ], CPU=0.00 sec, SCORE=869, Nseq=5, Len=841 
+
+Tara-RRB__B     NWTATPGLRVDLSSMVRLEGQLAQGLVTDVHRKGMMRSEDLAELKRLEES
+Kv-RRB__B       NWTLTPGLAVGLPDIFRLQAEVGQGALSEGQLRSMMSPAEFEELLRLEKL
+KpBest          M-IIRPEQ------------------------------------------
+cBEST1          M-TVTYTNRVA---------------------------------------
+bBEST2          M-TVTYTARVA---------------------------------------
+                                                                  
+
+Tara-RRB__B     GFLQAQQHRNWESQTREMTFLAHGINHIAYDPR--SWMKTLTAVRGRAP-
+Kv-RRB__B       GMAQAQLREEWEWQTREQTFLSAGVH--NINYDPGHWTETLIGIHGRAE-
+KpBest          -----------------------------------HWFLRLFDWHGSVLS
+cBEST1          ----------------------------DARLG--TFSQLLLQWKGSIYK
+bBEST2          ----------------------------KARFG--GFSKLLLLWRGSIYK
+                                                    :   *   :*    
+
+Tara-RRB__B     -T-----SFLLWVVLIESSIVLALSKFFGESFDLGVSSGIHSLFGVLVSF
+Kv-RRB__B       -PSRPCWVIAFVALIVAAVNEIWPEVG----EKIVISNTIHSLMGGSIMF
+KpBest          KIIFRLLLNV------LMSIIAIISYQWYEQLGIHLTVAPFSLLGIAIAI
+cBEST1          LLYSEFLIFISLYFAISLVYRLILSESQRLMFEKLALYCNSYAELIPVSF
+bBEST2          LLWRELLCFLGLFMALSAAYRFVLTEEQKRYFEKLVLYCDRYASLIPVSF
+                                                               : :
+
+Tara-RRB__B     LVVFRTQAAFKKWWSGRSAVSSLVQMSRTFAQQVCAYVKD-----EAYVN
+Kv-RRB__B       LVVFRTQFAFNKWWSGRQAFGDIVLNSRTVAQQVCSYLLD-----DQACH
+KpBest          FLGFRNSASYSRFVEARNLWGTVLIAERTLVRQLRNILPAE----HDAHR
+cBEST1          VLGFYVSLVVSRWWAQYESIPW----PDRIMNLVSCNVDGEDEYGRLLRR
+bBEST2          VLGFYVTLVVHRWWNQYLSMPL----TDALMCVVVGTVHGHDERGRLYRR
+                .: *       ::                .   :   :           .
+
+Tara-RRB__B     RMVRYSIATVVATRCHLR------NTRIDPAMLLGVLKEEEIEELNRQ--
+Kv-RRB__B       KVVKYIIAAVVATRCHLR------STRIDPNMLIGILSKTEVALLNQQ--
+KpBest          RIVSYLVAFSWSLKHQLR------KTDP-TADLRRLLPEERVTEILAS--
+cBEST1          TLMRYSNLCSVLILRSVSTAVYKRFPSMEHVVRAGLMTPEEHKKFESLNS
+bBEST2          TLMRYAGLSGVLILRSVSTAVFKRFPTIDHVVEAGFMTREERKKFENLNS
+                 :: *           :        .         .:   .   :     
+
+Tara-RRB__B     K-NLPFYTAWVIRSTLAEAVAEGACL-P-LHMAIENAIKAIEQSIADAER
+Kv-RRB__B       T-SMPYYATWIVRSTVAEAVQKGHYL-P-FQMAIERAIMSLEHSIAASEE
+KpBest          S-MPTNRILLLAGNEIGQLREAGKLSDI-TYGLMDNKLDELAHVLGGCER
+cBEST1          PHNKFWIPCVWFSNLAVKARNEGRIRDSVLLQGILNELNTLRSQCGRLYG
+bBEST2          SYNKYWVPCVWFCNLAAQARREGRIRDNGAFKLLLEELNVFRSKCGMLFH
+                             .   :    *          : . :  :    .    
+
+Tara-RRB__B     LL-TPMPFTYVVHVRTFLFIYLMGLPFIL----------VEDLGWLMLVA
+Kv-RRB__B       LL-TPMPFVYVAHLRTFLFLYLLFLPFVL----------VADLGRVMALA
+KpBest          LATTPVPFAYTLILQRTVYLFCTLLPFAL----V------GDLHYMTPFV
+cBEST1          YDWISIPLVYTQVVTVAVYSFFLACLIGRQFLDPEKAYPGHELDLFVPVF
+bBEST2          YDWISVPLVYTQVVTIAVYSYFLACLIGRQFLDPAQGYKDHDLDLCVPIF
+                    .:*:.*.  :   :: :     :              :*     . 
+
+Tara-RRB__B     VSFLGYLMIGLENTAVQLENPFGTDCNHHPLDLYCLEVSQDLLHLLDLRA
+Kv-RRB__B       VALASYLLLGLENTAVKLENPFGFDPNDLPLDLYCVEVSRELLGILKQRA
+KpBest          SVFISYTFLSWDSLAEELEDPFGTAANDLPLNAMCNTIERNLLDMTGQ-H
+cBEST1          TFLQFFFYAGWLKVAEQLINPFGEDDDDFETNWLIDRNLQVSLMAVDEMH
+bBEST2          TLLQFFFYAGWLKVAEQLINPFGEDDDDFETNFLIDRCFQVSMLAVDEMY
+                  :  :   .  . * :* :***   :.   :       :  :       
+
+Tara-RRB__B     SAKA-Q--------------------------------------------
+Kv-RRB__B       QGKI-A----------------ASNSGILHRIAEAQGS--------DD--
+KpBest          PLPETLRPDRYFNL------------------------------------
+cBEST1          QDLPILEKDLYWNEPDPQPPYTAAT-AEY-KRPSFLGSTFDISMQKEEME
+bBEST2          DDLAMLEKDLYWDAAEARAPYTAAT-AFLMQQPSFQGSTFDITLAKEDMQ
+                                                                  
+
+Tara-RRB__B     --------------------------------------------------
+Kv-RRB__B       --------------------------------------------------
+KpBest          --------------------------------------------------
+cBEST1          FQPLEQIKENEEANHSTPLLGHLGRLLGVQSP--SFSRSSSRMNLLRRRG
+bBEST2          FQRQDGLEAPLNEAHGDF----LQRLLPVGTGMGTGGLLGRRVPLLRRKN
+                                                                  
+
+Tara-RRB__B     --------------------------------------------------
+Kv-RRB__B       ------M-------------------------------------------
+KpBest          --------------------------------------------------
+cBEST1          EPTSPFSHYTYQDMGKSGNISHPRGDTNSQEHWDGEDRKLREFDAFISTP
+bBEST2          ------SHVSEESMAASCACAG----------------------------
+                                                                  
+
+Tara-RRB__B     --------------------------------------------------
+Kv-RRB__B       --------------------------------------------------
+KpBest          --------------------------------------------------
+cBEST1          FYERPGFYSAPQTPISSIPMIFPSRRQGRKKPPALSSIAACSNSLKDVVN
+bBEST2          ------------------------------APDGAVPECGCEGPLVDL--
+                                                                  
+
+Tara-RRB__B     --------------------------------------------------
+Kv-RRB__B       --------------------------------------------------
+KpBest          --------------------------------------------------
+cBEST1          SSPSRMSDTYKSQSSLGSGAKETFIWPTERNKGPDSLVVMVEEEKSNSSS
+bBEST2          --------------------------------------------------
+                                                                  
+
+Tara-RRB__B     --------------------------------------------------
+Kv-RRB__B       --------------------------HINPNHEVQ-DD------------
+KpBest          --------------------------------------------------
+cBEST1          KSREAAITGSPAALSTASDSPKFPFLAESPDHEQQ-GSFKSLKSLKGSHP
+bBEST2          --------GQPEPESEPITGPESPALVPAPRAPSEPLTVVPLSGTRGPAP
+                                                                  
+
+Tara-RRB__B     --------------------------------------------------
+Kv-RRB__B       --------------------------------------------------
+KpBest          --------------------------------------------------
+cBEST1          PWLTLENAATTTSNCEQSSAFPQPGNIPPSSSTSFCFSFTPVASPVLERS
+bBEST2          PWLP---------------------------------------------S
+                                                                  
+
+Tara-RRB__B     --------------------------------------------------
+Kv-RRB__B       --------------------------------------------------
+KpBest          --------------------------------------------------
+cBEST1          PIGNRGPDTHSLSSEDTASAPDQHPSEVSRSGRDTASRSSNAPPTRETRR
+bBEST2          PIGEE---------------------------------------------
+                                                                  
+
+Tara-RRB__B     -----------------------------------------
+Kv-RRB__B       ------------------------------------M---D
+KpBest          ----------------------------------------T
+cBEST1          AESPSTNDSGISLAEGDYVGLMEVIMEASESVCEEQMDQCS
+bBEST2          ---------------------------------EES---LA
+                                                         
+
+
+

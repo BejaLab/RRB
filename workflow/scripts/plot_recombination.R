@@ -4,34 +4,43 @@ library(tidyr)
 library(ggplot2)
 library(jsonlite)
 library(readxl)
-library(zoo)
 library(ggtree)
 library(treeio)
 library(seqinr)
 library(ggpubr)
 library(ggrepel)
+library(zoo)
 
-input  <- snakemake@input
-output <- snakemake@output
-
-fasta_file    <- input$fasta
-geneconv_file <- input$geneconv
-gard_file     <- input$gard
-metadata_file <- input$metadata
-feature_file  <- input$features
-RB_groups_file <- input$RB_groups
-output_file   <- unlist(output)
-
-codons <- read.fasta(fasta_file)
+with(snakemake@input, {
+	fasta_file     <<- fasta
+	geneconv_file  <<- geneconv
+	gard_file      <<- gard
+	metadata_file  <<- metadata
+	RB_groups_file <<- RB_groups
+	TM_file        <<- TMs
+})
+output_file   <- unlist(snakemake@output)
+codons <- read.fasta(fasta_file, forceDNAtolower = F)
 last_res <- length(codons[[1]])
 
 metadata <- read_excel(metadata_file) %>%
 	filter(!is.na(Gene)) %>%
 	mutate(Gene_dash = gsub("-", "_", Gene))
-features <- read.table(feature_file, sep = ",", header = T)
 
-TM_rect <- geom_rect(data = features, mapping = aes(xmin = Min..with.gaps., xmax = Max..with.gaps.), ymin = -Inf, ymax = Inf, fill = "gray", alpha = 0.4)
-TM_text <- geom_text(data = features, mapping = aes(x = (Min..with.gaps. + Max..with.gaps.) / 2, label = paste0(Name, "\n")), y = -Inf, vjust = "inward", color = "gray")
+TM_df <- read.table(TM_file, col.names = c("ref_seq", "name","start","end"))
+ref_seq <- first(TM_df$ref_seq)
+
+residues <- data.frame(res = as.character(codons[[ref_seq]]), aln_num = 1:last_res) %>%
+	filter(res != "-") %>%
+	mutate(res_num = 1:n())
+
+TMs <- TM_df %>%
+	left_join(residues, by = c(start = "res_num")) %>%
+	left_join(residues, by = c(end = "res_num"))
+
+TM_rect <- geom_rect(data = TMs, mapping = aes(xmin = aln_num.x, xmax = aln_num.y), ymin = -Inf, ymax = Inf, fill = "gray", alpha = 0.4)
+TM_text <- geom_text(data = TMs, mapping = aes(x = (aln_num.x + aln_num.y) / 2, label = paste0(name, "\n")), y = -Inf, vjust = "inward", color = "gray")
+
 scale_x <- scale_x_continuous(limits = c(1, last_res), expand = c(0, 0))
 my_theme <- theme_bw() + theme(axis.title.x = element_blank(), legend.position = "none")
 my_colors <- read.table(RB_groups_file, col.names = c("Group", "Color"), comm = "") %>%

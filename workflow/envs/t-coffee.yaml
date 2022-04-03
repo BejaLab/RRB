@@ -1,0 +1,5 @@
+name: t-coffee
+channels:
+ - bioconda
+dependencies:
+ - t-coffee=13.45.0.4846264

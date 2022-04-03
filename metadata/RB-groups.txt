@@ -1,8 +1,0 @@
-U	#008080ff
-C	#0080beff
-M	#8117b4ff
-T	#0000b4ff
-K	#dc143cff
-D	#965b29ff
-P	#ff7518ff
-G	#ff00ffff

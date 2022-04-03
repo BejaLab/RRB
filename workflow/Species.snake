@@ -3,258 +3,288 @@ from os import path
 from csv import DictReader
 from collections import defaultdict
 
+configfile: "config/config.yaml"
+
 assemblies = {}
 names = defaultdict(list)
 outgroups = defaultdict(list)
 
 taxa = {}
-with open('species_metadata/taxa.txt') as fh:
-	reader = DictReader(fh, delimiter = '\t')
-	for row in reader:
-		taxon = row['Taxon']
-		taxa[taxon] = row
-with open('species_metadata/species.txt') as fh:
-	reader = DictReader(fh, delimiter = '\t')
-	for row in reader:
-		taxon = row['Taxon']
-		name = row['Name']
-		assemblies[name] = row['Assemblies'].split(',')
-		if row['IsOutgroup']: outgroups[taxon].append(name)
-		names[taxon].append(name)
+with open('input/species/taxa.txt') as fh:
+    reader = DictReader(fh, delimiter = '\t')
+    for row in reader:
+        taxon = row['Taxon']
+        taxa[taxon] = row
+with open('input/species/species.txt') as fh:
+    reader = DictReader(fh, delimiter = '\t')
+    for row in reader:
+        taxon = row['Taxon']
+        name = row['Name']
+        assemblies[name] = row['Assemblies'].split(',')
+        if row['IsOutgroup']: outgroups[taxon].append(name)
+        names[taxon].append(name)
 
 rule assemblies_collect:
-	input:
-		lambda w: expand("species_assemblies/{assembly}.faa", assembly = assemblies[w.name])
-	output:
-		"species_analysis/{taxon}/sequences/{name}.faa"
-	shell:
-		"cat {input} > {output}"
+    input:
+        lambda w: expand("species_assemblies/{assembly}.faa", assembly = assemblies[w.name])
+    output:
+        "analysis/species/{taxon}/sequences/{name}.faa"
+    shell:
+        "cat {input} > {output}"
 
 rule assemblies_cdhit:
-	input:
-		"species_analysis/{taxon}/sequences/{name}.faa"
-	output:
-		"species_analysis/{taxon}/cdhit/{name}.cdhit"
-	params:
-		c = 0.9
-	log:
-		"species_analysis/{taxon}/cdhit/{name}.cdhit.log"
-	shell:
-		"cdhit -i {input} -o {output} -c {params.c} -d 0 &> {log}"
+    input:
+        "analysis/species/{taxon}/sequences/{name}.faa"
+    output:
+        "analysis/species/{taxon}/cdhit/{name}.cdhit"
+    params:
+        c = 0.9
+    log:
+        "analysis/species/{taxon}/cdhit/{name}.cdhit.log"
+    conda:
+        "envs/tools.yaml"
+    shell:
+        "cdhit -i {input} -o {output} -c {params.c} -d 0 &> {log}"
 
 
 rule assemblies_busco:
-	input:
-		"species_analysis/{taxon}/cdhit/{name}.cdhit"
-	output:
-		"species_analysis/{taxon}/busco/{name}/run_{lineage}/full_table.tsv",
-		"species_analysis/{taxon}/busco/{name}/short_summary.specific.{lineage}.busco.txt",
-		directory("species_analysis/{taxon}/busco/{name}/logs_{lineage}"),
-		directory("species_analysis/{taxon}/busco/{name}/run_{lineage}/busco_sequences/single_copy_busco_sequences/")
-	threads:
-		10
-	shadow:
-		"minimal"
-	params:
-		dir = "species_analysis/{taxon}/busco/{name}"
-	shell:
-		"""
-		busco --lineage_dataset {wildcards.lineage} -f -i {input} -o busco -m protein -c {threads}
-		mv busco/logs busco/logs_{wildcards.lineage}
-		rsync -qav busco/ {params.dir}
-		"""
+    input:
+        "analysis/species/{taxon}/cdhit/{name}.cdhit"
+    output:
+        "analysis/species/{taxon}/busco/{name}/run_{lineage}/full_table.tsv",
+        "analysis/species/{taxon}/busco/{name}/short_summary.specific.{lineage}.busco.txt",
+        directory("analysis/species/{taxon}/busco/{name}/logs_{lineage}"),
+        directory("analysis/species/{taxon}/busco/{name}/run_{lineage}/busco_sequences/single_copy_busco_sequences/")
+    threads:
+        10
+    shadow:
+        "minimal"
+    params:
+        dir = "analysis/species/{taxon}/busco/{name}"
+    shell:
+        """
+        busco --lineage_dataset {wildcards.lineage} -f -i {input} -o busco -m protein -c {threads}
+        mv busco/logs busco/logs_{wildcards.lineage}
+        rsync -qav busco/ {params.dir}
+        """
 
 rule assemblies_proteinortho:
-	input:
-		lambda w: expand("species_analysis/{taxon}/cdhit/{name}.cdhit", taxon = w.taxon, name = names[w.taxon])
-	output:
-		"species_analysis/{taxon}/proteinortho.proteinortho.tsv"
-	shadow:
-		"minimal"
-	params:
-		dir = "species_analysis/{taxon}",
-		evalue = 1e-5
-	threads:
-		30
-	shell:
-		"""
-		proteinortho -project=proteinortho -cpus={threads} -e={params.evalue} {input}
-		mv proteinortho.* {params.dir}
-		"""
+    input:
+        lambda w: expand("analysis/species/{taxon}/cdhit/{name}.cdhit", taxon = w.taxon, name = names[w.taxon])
+    output:
+        "analysis/species/{taxon}/proteinortho.proteinortho.tsv"
+    shadow:
+        "minimal"
+    params:
+        dir = "analysis/species/{taxon}",
+        evalue = 1e-5
+    threads:
+        30
+    conda:
+        "envs/proteinortho.yaml"
+    shell:
+        """
+        proteinortho -project=proteinortho -cpus={threads} -e={params.evalue} {input}
+        mv proteinortho.* {params.dir}
+        """
 
 rule assemblies_proteinortho_filter:
-	input:
-		"species_analysis/{taxon}/proteinortho.proteinortho.tsv"
-	output:
-		"species_analysis/{taxon}/proteinortho.selected.tsv"
-	params:
-		min_species = lambda w: int(taxa[w.taxon]['MinSpecies']),
-		conn_max = 0.6
-	shell:
-		"awk -v s={params.min_species} -v c={params.conn_max} 'NR==1||($1==$2&&$2>=s&&$3>=c)' {input} > {output}"
+    input:
+        "analysis/species/{taxon}/proteinortho.proteinortho.tsv"
+    output:
+        "analysis/species/{taxon}/proteinortho.selected.tsv"
+    params:
+        min_species = lambda w: int(taxa[w.taxon]['MinSpecies']),
+        conn_max = 0.6
+    conda:
+        "envs/tools.yaml"
+    shell:
+        "awk -v s={params.min_species} -v c={params.conn_max} 'NR==1||($1==$2&&$2>=s&&$3>=c)' {input} > {output}"
 
 checkpoint proteinortho_collect:
-	input:
-		selected = "species_analysis/{taxon}/proteinortho.selected.tsv",
-		cdhit = lambda w: expand("species_analysis/{taxon}/cdhit/{name}.cdhit", taxon = w.taxon, name = names[w.taxon])
-	output:
-		directory("species_analysis/{taxon}/orthogroups_proteinortho")
-	shell:
-		"perl workflow/scripts/proteinortho_grab_proteins.pl -t -s -output_dir={output} -output_file=sequences.faa -exact {input.selected} {input.cdhit}"
+    input:
+        selected = "analysis/species/{taxon}/proteinortho.selected.tsv",
+        cdhit = lambda w: expand("analysis/species/{taxon}/cdhit/{name}.cdhit", taxon = w.taxon, name = names[w.taxon])
+    output:
+        directory("analysis/species/{taxon}/orthogroups_proteinortho")
+    conda:
+        "envs/proteinortho.yaml"
+    shell:
+        "perl workflow/scripts/proteinortho_grab_proteins.pl -t -s -output_dir={output} -output_file=sequences.faa -exact {input.selected} {input.cdhit}"
 
 checkpoint busco_collect:
-	input:
-		lambda w: expand("species_analysis/{taxon}/busco/{name}/run_{lineage}/busco_sequences/single_copy_busco_sequences/",
-				taxon = w.taxon, name = names[w.taxon], lineage = taxa[w.taxon]["BuscoLineage"])
-	output:
-		directory("species_analysis/{taxon}/orthogroups_busco")
-	params:
-		min_species = lambda w: int(taxa[w.taxon]['MinSpecies'])
-	script:
-		"scripts/busco_collect.py"
+    input:
+        lambda w: expand("analysis/species/{taxon}/busco/{name}/run_{lineage}/busco_sequences/single_copy_busco_sequences/",
+                taxon = w.taxon, name = names[w.taxon], lineage = taxa[w.taxon]["BuscoLineage"])
+    output:
+        directory("analysis/species/{taxon}/orthogroups_busco")
+    params:
+        min_species = lambda w: int(taxa[w.taxon]['MinSpecies'])
+    conda:
+        "envs/tools.yaml"
+    script:
+        "scripts/busco_collect.py"
 
 def orthogroups_dir(wildcards):
-	ortho_type = taxa[wildcards.taxon]["Orthology"]
-	if ortho_type == "proteinortho":
-		chkpt_collect = checkpoints.proteinortho_collect
-	else:
-		chkpt_collect = checkpoints.busco_collect
-	return chkpt_collect.get(**wildcards).output[0]
+    ortho_type = taxa[wildcards.taxon]["Orthology"]
+    if ortho_type == "proteinortho":
+        chkpt_collect = checkpoints.proteinortho_collect
+    else:
+        chkpt_collect = checkpoints.busco_collect
+    return chkpt_collect.get(**wildcards).output[0]
 
 def orthogroup_file(fname, wildcards):
-	dir_name = orthogroups_dir(wildcards)
-	pattern_faa = path.join(dir_name, "{orthogroup}", "sequences.faa")
-	orthogroups,= glob_wildcards(pattern_faa)
-	pattern_file = path.join(dir_name, "{orthogroup}", fname)
-	return expand(pattern_file, taxon = wildcards.taxon, orthogroup = orthogroups)
+    dir_name = orthogroups_dir(wildcards)
+    pattern_faa = path.join(dir_name, "{orthogroup}", "sequences.faa")
+    orthogroups,= glob_wildcards(pattern_faa)
+    pattern_file = path.join(dir_name, "{orthogroup}", fname)
+    return expand(pattern_file, taxon = wildcards.taxon, orthogroup = orthogroups)
 
 rule orthogroup_mafft:
-	input:
-		"species_analysis/{taxon}/{orthogroup_type}/{orthogroup}/sequences.faa"
-	output:
-		"species_analysis/{taxon}/{orthogroup_type}/{orthogroup}/mafft.faa"
-	shell:
-		"mafft --localpair --maxiterate 1000 {input} > {output}"
+    input:
+        "analysis/species/{taxon}/{orthogroup_type}/{orthogroup}/sequences.faa"
+    output:
+        "analysis/species/{taxon}/{orthogroup_type}/{orthogroup}/mafft.faa"
+    conda:
+        "envs/tools.yaml"
+    shell:
+        "mafft --localpair --maxiterate 1000 {input} > {output}"
 
 rule orthogroup_trim:
-	input:
-		"species_analysis/{taxon}/{orthogroup_type}/{orthogroup}/mafft.faa"
-	output:
-		"species_analysis/{taxon}/{orthogroup_type}/{orthogroup}/trimal.faa"
-	shell:
-		"trimal -in {input} -out {output} -automated1"
+    input:
+        "analysis/species/{taxon}/{orthogroup_type}/{orthogroup}/mafft.faa"
+    output:
+        "analysis/species/{taxon}/{orthogroup_type}/{orthogroup}/trimal.faa"
+    conda:
+        "envs/tools.yaml"
+    shell:
+        "trimal -in {input} -out {output} -automated1"
 
 rule orthogroup_iqtree:
-	input:
-		"species_analysis/{taxon}/{orthogroup_type}/{orthogroup}/trimal.faa"
-	output:
-		"species_analysis/{taxon}/{orthogroup_type}/{orthogroup}/iqtree.treefile"
-	params:
-		prefix = "species_analysis/{taxon}/{orthogroup_type}/{orthogroup}/iqtree",
-		seed = 123
-	shell:
-		"iqtree2 -s {input} --prefix {params.prefix} --seed {params.seed} -T 1"
+    input:
+        "analysis/species/{taxon}/{orthogroup_type}/{orthogroup}/trimal.faa"
+    output:
+        "analysis/species/{taxon}/{orthogroup_type}/{orthogroup}/iqtree.treefile"
+    params:
+        prefix = "analysis/species/{taxon}/{orthogroup_type}/{orthogroup}/iqtree",
+        seed = 123
+    conda:
+        "envs/tools.yaml"
+    shell:
+        "iqtree2 -s {input} --prefix {params.prefix} --seed {params.seed} -T 1"
 
 rule orthogroups_treeshrink:
-	input:
-		lambda w: orthogroup_file("iqtree.treefile", w)
-	output:
-		touch("species_analysis/{taxon}/treeshrink.ok")
-	params:
-		dir = orthogroups_dir
-	shell:
-		"run_treeshrink.py -i {params.dir} -t iqtree.treefile -a trimal.faa -O treeshrink --force"
+    input:
+        lambda w: orthogroup_file("iqtree.treefile", w)
+    output:
+        touch("analysis/species/{taxon}/treeshrink.ok")
+    params:
+        dir = orthogroups_dir
+    shell:
+        "run_treeshrink.py -i {params.dir} -t iqtree.treefile -a trimal.faa -O treeshrink --force"
 
 rule orthogroups_cat_trees:
-	input:
-		"species_analysis/{taxon}/treeshrink.ok"
-	output:
-		"species_analysis/{taxon}/treeshrink.trees"
-	params:
-		trees = lambda w: orthogroup_file("treeshrink.treefile", w)
-	shell:
-		"cat {params.trees} > {output}"
+    input:
+        "analysis/species/{taxon}/treeshrink.ok"
+    output:
+        "analysis/species/{taxon}/treeshrink.trees"
+    params:
+        trees = lambda w: orthogroup_file("treeshrink.treefile", w)
+    shell:
+        "cat {params.trees} > {output}"
 
 rule astral:
-	input:
-		"species_analysis/{taxon}/treeshrink.trees"
-	output:
-		"species_analysis/{taxon}/astral-t{t}.tree"
-	shell:
-		"astral -t {wildcards.t} -i {input} -o {output}"
+    input:
+        "analysis/species/{taxon}/treeshrink.trees"
+    output:
+        "analysis/species/{taxon}/astral-t{t}.tree"
+    params:
+        jar = config['astral_path']
+    shell:
+        "java -jar {params.jar:q} -t {wildcards.t} -i {input} -o {output}"
 
 rule astral_topology:
-	input:
-		"species_analysis/{taxon}/astral-t3.tree"
-	output:
-		"species_analysis/{taxon}/astral.topology"
-	shell:
-		"nw_topology {input} | nw_reroot -sd - > {output}"
+    input:
+        "analysis/species/{taxon}/astral-t3.tree"
+    output:
+        "analysis/species/{taxon}/astral.topology"
+    conda:
+        "envs/tools.yaml"
+    shell:
+        "nw_topology {input} | nw_reroot -sd - > {output}"
 
 rule calc_dists:
-	input:
-		ok = "species_analysis/{taxon}/treeshrink.ok",
-		mafft = lambda w: orthogroup_file("mafft.faa", w)
-	output:
-		"species_analysis/{taxon}/treeshrink.dists"
-	params:
-		trees = lambda w: orthogroup_file("treeshrink.treefile", w)
-	script:
-		"scripts/calc_dists.R"
+    input:
+        ok = "analysis/species/{taxon}/treeshrink.ok",
+        mafft = lambda w: orthogroup_file("mafft.faa", w)
+    output:
+        "analysis/species/{taxon}/treeshrink.dists"
+    params:
+        trees = lambda w: orthogroup_file("treeshrink.treefile", w)
+    conda:
+        "envs/r.yaml"
+    script:
+        "scripts/calc_dists.R"
 
 rule erable:
-	input:
-		dists = "species_analysis/{taxon}/treeshrink.dists",
-		topology = "species_analysis/{taxon}/astral.topology"
-	output:
-		"species_analysis/{taxon}/erable.tree.length.nwk"
-	params:
-		prefix = "species_analysis/{taxon}/erable.tree"
-	shell:
-		"erable -i {input.dists} -t {input.topology} -o {params.prefix}"
+    input:
+        dists = "analysis/species/{taxon}/treeshrink.dists",
+        topology = "analysis/species/{taxon}/astral.topology"
+    output:
+        "analysis/species/{taxon}/erable.tree.length.nwk"
+    params:
+        prefix = "analysis/species/{taxon}/erable.tree"
+    shell:
+        "erable -i {input.dists} -t {input.topology} -o {params.prefix}"
 
 rule reroot_astral:
-	input:
-		"species_analysis/{taxon}/astral-t{t}.tree"
-	output:
-		w_outgroup = "species_analysis/{taxon}/astral_w_outgroup-t{t}.rooted.tree",
-		no_outgroup = "species_analysis/{taxon}/astral_no_outgroup-t{t}.rooted.tree"
-	params:
-		outgroup = lambda w: outgroups[w.taxon]
-	shell:
-		"nw_reroot -s {input} {params.outgroup} | tee {output.w_outgroup} | nw_prune - {params.outgroup} > {output.no_outgroup}"
+    input:
+        "analysis/species/{taxon}/astral-t{t}.tree"
+    output:
+        w_outgroup = "analysis/species/{taxon}/astral_w_outgroup-t{t}.rooted.tree",
+        no_outgroup = "analysis/species/{taxon}/astral_no_outgroup-t{t}.rooted.tree"
+    params:
+        outgroup = lambda w: outgroups[w.taxon]
+    shell:
+        "nw_reroot -s {input} {params.outgroup} | tee {output.w_outgroup} | nw_prune - {params.outgroup} > {output.no_outgroup}"
 
 rule reroot_erable:
-	input:
-		"species_analysis/{taxon}/erable.tree.length.nwk"
-	output:
-		w_outgroup = "species_analysis/{taxon}/erable_w_outgroup.rooted.tree",
-		no_outgroup = "species_analysis/{taxon}/erable_no_outgroup.rooted.tree"
-	params:
-		outgroup = lambda w: outgroups[w.taxon]
-	shell:
-		"nw_reroot -s {input} {params.outgroup} | tee {output.w_outgroup} | nw_prune - {params.outgroup} > {output.no_outgroup}"
+    input:
+        "analysis/species/{taxon}/erable.tree.length.nwk"
+    output:
+        w_outgroup = "analysis/species/{taxon}/erable_w_outgroup.rooted.tree",
+        no_outgroup = "analysis/species/{taxon}/erable_no_outgroup.rooted.tree"
+    params:
+        outgroup = lambda w: outgroups[w.taxon]
+    conda:
+        "envs/tools.yaml"
+    shell:
+        "nw_reroot -s {input} {params.outgroup} | tee {output.w_outgroup} | nw_prune - {params.outgroup} > {output.no_outgroup}"
 
 rule plot_species_tree:
-	input:
-		astral = "species_analysis/{taxon}/astral_w_outgroup-t2.rooted.tree",
-		erable = "species_analysis/{taxon}/erable_w_outgroup.rooted.tree",
-		busco = lambda w: expand("species_analysis/{taxon}/busco/{name}/run_{lineage}/full_table.tsv", taxon = w.taxon, name = names[w.taxon], lineage = taxa[w.taxon]["BuscoLineage"]),
-		species = "species_metadata/species.txt"
-	output:
-		"output/{taxon}.svg"
-	params:
-		root_ratio = 0.1,
-		width  = lambda w: float(taxa[w.taxon]["Width"]),
-		height = lambda w: float(taxa[w.taxon]["Height"])
-	script:
-		"scripts/plot_species_tree.R"
+    input:
+        astral = "analysis/species/{taxon}/astral_w_outgroup-t2.rooted.tree",
+        erable = "analysis/species/{taxon}/erable_w_outgroup.rooted.tree",
+        busco = lambda w: expand("analysis/species/{taxon}/busco/{name}/run_{lineage}/full_table.tsv", taxon = w.taxon, name = names[w.taxon], lineage = taxa[w.taxon]["BuscoLineage"]),
+        species = "input/species/species.txt"
+    output:
+        "output/species/{taxon}.svg"
+    params:
+        root_ratio = 0.1,
+        width  = lambda w: float(taxa[w.taxon]["Width"]),
+        height = lambda w: float(taxa[w.taxon]["Height"])
+    conda:
+        "envs/r.yaml"
+    script:
+        "scripts/plot_species_tree.R"
 
 rule species_trees_chronos:
-	input:
-		astral = expand("species_analysis/{taxon}/astral_no_outgroup-t3.rooted.tree", taxon = taxa.keys()),
-		erable = expand("species_analysis/{taxon}/erable_no_outgroup.rooted.tree", taxon = taxa.keys())
-	output:
-		"output/species_chronos.nwk"
-	script:
-		"scripts/chronos_species_trees.R"
+    input:
+        astral = expand("analysis/species/{taxon}/astral_no_outgroup-t3.rooted.tree", taxon = taxa.keys()),
+        erable = expand("analysis/species/{taxon}/erable_no_outgroup.rooted.tree", taxon = taxa.keys())
+    output:
+        "output/species/species_chronos.nwk"
+    conda:
+        "envs/r.yaml"
+    script:
+        "scripts/chronos_species_trees.R"

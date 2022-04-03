@@ -1,0 +1,42 @@
+
+pdbs ,= glob_wildcards("data/pdb/{pdb}.pdb")
+
+pdb_files = {}
+for domain in [ "rhodopsins", "bestrophins" ]:
+    pdb_files[domain] = []
+    template = "input/struct_alignment/%s/template.txt" % domain
+    with open(template) as fd:
+        for line in fd:
+            name, _P_, pdb = line.rstrip().split()
+            pdb_files[domain].append(pdb)
+
+rule t_coffee:
+    input:
+        sequences = "input/struct_alignment/{domain}/sequences.fasta",
+        template = "input/struct_alignment/{domain}/template.txt",
+        pdbs = lambda w: pdb_files[w.domain]
+    output:
+        aln = "output/struct_alignment/{domain}.aln",
+        dnd = "output/struct_alignment/{domain}.dnd"
+    params:
+        method = "sap_pair,mustang_pair,t_coffee_msa,probcons_msa",
+        pdb_min_sim = 90,
+        pdb_min_cov = 0
+    threads:
+        workflow.cores
+    conda:
+        "envs/t-coffee.yaml"
+    shell:
+        "t_coffee {input.sequences} -outfile {output.aln} -newtree {output.dnd} -method {params.method} -template_file {input.template} -pdb_min_sim {params.pdb_min_sim} -pdb_min_cov {params.pdb_min_cov} -n_core {threads}"
+
+rule struct_features:
+    input:
+        pdbs = lambda w: pdb_files[w.domain],
+        opm = "input/struct_alignment/{domain}/opm_server.tsv",
+        sequences = "input/struct_alignment/{domain}/sequences.fasta"
+    output:
+        "output/struct_alignment/{domain}.gff"
+    conda:
+        "envs/r.yaml"
+    script:
+        "scripts/features.R"

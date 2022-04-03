@@ -11,11 +11,12 @@ tree.files <- sort(params$trees)
 alig.files <- sort(input$mafft)
 dist.file  <- unlist(output)
 
+alig.names <- basename(dirname(alig.files))
 alig.lens <- lapply(alig.files, read.fasta) %>%
 	lapply(`[`, 1) %>%
 	lapply(unlist) %>%
 	lapply(length) %>%
-	setNames(basename(dirname(alig.files)))
+	setNames(alig.names)
 
 tree.dists <- lapply(tree.files, read.tree) %>%
 	do.call(c,.) %>%

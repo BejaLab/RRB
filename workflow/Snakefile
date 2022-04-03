@@ -4,15 +4,17 @@ include: "Codons.snake"
 include: "Species.snake"
 include: "Global_bestrophins.snake"
 include: "Global_rhodopsins.snake"
+include: "Struct_alignment.snake"
+
+domains = [ "rhodopsins", "bestrophins" ]
 
 rule all:
-	input:
-		#expand("output/{domain}_recombination.svg", domain = "rhodopsins"),
-		expand("species_analysis/{taxon}/treeshrink.ok", taxon = taxa.keys()),
-		"output/rooted_trees.svg",
-		"output/species_chronos.nwk",
-		expand("output/{taxon}.svg", taxon = taxa.keys()),
-		"output/bestrophins_ur50_iqtree.pdf",
-		"output/rhodopsins_iqtree.pdf"
-		# "global_analysis/bestrophins/uniref50.fasta",
-		# "global_analysis/bestrophins/uniref50.txt"
+    input:
+        expand("output/codons/{domain}_recombination.svg", domain = "rhodopsins"),
+        "output/codons/rooted_trees.svg",
+        "output/species/species_chronos.nwk",
+        expand("output/species/{taxon}.svg", taxon = taxa.keys()),
+        "output/global_phylogeny/bestrophins_ur50_iqtree.pdf",
+        "output/global_phylogeny/rhodopsins_iqtree.pdf",
+        expand("output/struct_alignment/{domain}.aln", domain = domains),
+        expand("output/struct_alignment/{domain}.gff", domain = domains)

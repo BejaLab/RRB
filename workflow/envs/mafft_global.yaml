@@ -1,0 +1,5 @@
+name: mafft_global
+channels:
+ - bioconda
+dependencies:
+ - mafft=7.475

@@ -1,0 +1,14 @@
+bestrophins:
+   long_min_len: 1000
+   mafft: '--auto --op 2 --ep 0.123 --reorder'
+
+rhodopsins:
+   long_min_len: 600
+   gard_range: '1:-127'
+   mafft: '--auto --op 2 --ep 0.123 --reorder'
+
+raxml_models:
+   CODON: GTR+G
+   NT2AA: LG+G+F
+
+astral_path: /opt/ASTRAL/astral.5.7.4.jar

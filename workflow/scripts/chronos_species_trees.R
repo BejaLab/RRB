@@ -5,7 +5,6 @@ library(tidyr)
 
 input <- snakemake@input
 output <- snakemake@output
-wildcards <- snakemake@wildcards
 
 astral_files <- input$astral
 erable_files <- input$erable
@@ -31,5 +30,4 @@ trees <- lapply(1:length(astral_files), function(taxon) {
 	lapply(chronos) %>%
 	lapply(`class<-`, "phylo")
 
-Reduce(`+`, trees) %>%
-	write.tree(output_file)
+write.tree(do.call(c, trees), output_file)

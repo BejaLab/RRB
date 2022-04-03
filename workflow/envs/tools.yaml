@@ -1,0 +1,15 @@
+name: tools
+channels:
+ - bioconda
+ - anaconda
+ - conda-forge
+dependencies:
+ - seqkit=0.14.0
+ - trimal=1.4.1
+ - hyphy=2.5.31
+ - mafft=7.490
+ - iqtree=2.1.2
+ - newick_utils=1.6
+ - cd-hit=4.8.1
+ - gawk=5.0.1
+ - blast=2.11.0
